@@ -30,7 +30,7 @@ export default function TransactionTable({ transactions, pageSize = 10, onPageSi
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState({ key: "tanggal", dir: "desc" });
   const size = Math.max(1, Number(pageSize) || 10);
-  const pageSizeOptions = [10, 20, 50];
+  const pageSizeOptions = [10, 50, 100, 1000];
 
   useEffect(() => {
     setPage(1);

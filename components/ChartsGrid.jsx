@@ -81,21 +81,28 @@ function TopExpenseList({ data }) {
   );
 }
 
-function groupByMonth(items) {
-  const map = new Map();
+function groupByMonthThisYear(items) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const result = [];
+  for (let m = 0; m <= currentMonth; m++) {
+    const d = new Date(year, m, 1);
+    const label = `${d.toLocaleString("id-ID", { month: "short" })} ${year}`;
+    result.push({ label, value: 0, month: m, year });
+  }
+
   items.forEach((tx) => {
     const date = parseTanggal(tx.tanggal);
     if (!date) return;
-    const label = `${date.toLocaleString("id-ID", { month: "short" })} ${date.getFullYear()}`;
-    map.set(label, (map.get(label) || 0) + tx.nominal);
+    if (date.getFullYear() !== year) return;
+    const m = date.getMonth();
+    if (m > currentMonth) return;
+    result[m].value += tx.nominal || 0;
   });
-  return [...map.entries()]
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => {
-      const [aMonth, aYear] = a.label.split(" ");
-      const [bMonth, bYear] = b.label.split(" ");
-      return new Date(`${aMonth} 1, ${aYear}`) - new Date(`${bMonth} 1, ${bYear}`);
-    });
+
+  return result.map(({ label, value }) => ({ label, value }));
 }
 
 function groupByWeek(items) {
@@ -126,7 +133,7 @@ function groupByWeek(items) {
     .sort((a, b) => a.date - b.date);
 }
 
-export default function ChartsGrid({ transactions, range }) {
+export default function ChartsGrid({ transactions, yearlyTransactions, range }) {
   const [expanded, setExpanded] = useState(true);
 
   const expenses = useMemo(
@@ -135,7 +142,7 @@ export default function ChartsGrid({ transactions, range }) {
   );
 
   const byCategory = useMemo(() => groupByKey(expenses, "kategori"), [expenses]);
-  const bySumber = useMemo(() => groupByKey(expenses, "sumberData"), [expenses]);
+  const bySumber = useMemo(() => groupByKey(expenses, "source"), [expenses]);
 
   const topExpenses = useMemo(() => {
     return [...expenses]
@@ -192,7 +199,13 @@ export default function ChartsGrid({ transactions, range }) {
   }, [expenses, range]);
 
   const weeklySeries = useMemo(() => groupByWeek(expenses), [expenses]);
-  const monthlySeries = useMemo(() => groupByMonth(expenses), [expenses]);
+
+  // Monthly chart uses yearlyTransactions to be independent of date range filter
+  const yearlyExpenses = useMemo(
+    () => yearlyTransactions?.filter((t) => t.jenis?.toLowerCase() !== "pemasukan") || [],
+    [yearlyTransactions]
+  );
+  const monthlySeries = useMemo(() => groupByMonthThisYear(yearlyExpenses), [yearlyExpenses]);
 
   const tooltipStyle = {
     background: "var(--tooltip-bg, #fff)",

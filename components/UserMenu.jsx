@@ -10,18 +10,12 @@ export default function UserMenu() {
   const ref = useRef(null);
 
   useEffect(() => {
-    // Decode JWT from cookie to get username — read on client from
-    // the login response which stored it in memory. Since httpOnly
-    // cookies can't be read by JS, we fetch a lightweight profile.
-    // Alternative: parse the cookie server-side and inject — simpler:
-    // read from document.cookie fallback or just show generic label.
-    // We do a quick fetch to /api/me to get the logged-in user.
     fetch("/api/me")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.username) setUsername(data.username);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {

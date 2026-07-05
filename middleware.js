@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
-import { verify } from "@/lib/auth";
 
-// Edge-compatible: no crypto.randomUUID, no Node-only APIs.
-// verify() uses crypto.subtle when available, falls back to Node crypto
-// — but middleware runs in Edge runtime on Vercel, so we import the
-// edge-safe verify path.
-
-// lib/auth.js uses Node crypto which is NOT available in Edge middleware.
-// We inline a minimal edge-compatible JWT verifier here.
+// Edge-compatible JWT verification (crypto.subtle instead of Node crypto)
 
 function b64urlToBytes(str) {
   // Edge-safe base64url decode

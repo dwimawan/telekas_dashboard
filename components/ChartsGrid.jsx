@@ -200,6 +200,12 @@ export default function ChartsGrid({ transactions, yearlyTransactions, range }) 
 
   const weeklySeries = useMemo(() => groupByWeek(expenses), [expenses]);
 
+  const weeklyAverage = useMemo(() => {
+    if (weeklySeries.length === 0) return 0;
+    const totalWeekly = weeklySeries.reduce((sum, w) => sum + w.value, 0);
+    return Math.round(totalWeekly / weeklySeries.length);
+  }, [weeklySeries]);
+
   // Monthly chart uses yearlyTransactions to be independent of date range filter
   const yearlyExpenses = useMemo(
     () => yearlyTransactions?.filter((t) => t.jenis?.toLowerCase() !== "pemasukan") || [],
@@ -293,7 +299,7 @@ export default function ChartsGrid({ transactions, yearlyTransactions, range }) 
       <ChartCard title="Pengeluaran per Minggu" empty={weeklySeries.length === 0}>
         <div className="flex h-full flex-col justify-between gap-3">
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            Total minggu: <span className="font-semibold text-slate-900 dark:text-slate-100">{weeklySeries.length}</span>
+            Rata-rata: <span className="font-semibold text-slate-900 dark:text-slate-100">{formatRupiah(weeklyAverage)}</span> per minggu
           </div>
           <div className="grow">
             <ResponsiveContainer width="100%" height="100%">

@@ -196,11 +196,14 @@ export default function DashboardPage() {
     };
   }, [activeRange, createdBy, currentUser]);
 
-  // Fetch yearly transactions (Jan 1 → today)
+  // Fetch yearly transactions (Jan 1 → today) with createdBy filter only
   useEffect(() => {
     let cancelled = false;
-    const params = new URLSearchParams({ start: yearlyRange.start, end: yearlyRange.end });
-    params.set("createdBy", "");
+    const params = new URLSearchParams({
+      start: yearlyRange.start,
+      end: yearlyRange.end,
+      createdBy,
+    });
 
     fetch(`/api/transactions?${params.toString()}`)
       .then((res) => res.json())
@@ -210,7 +213,7 @@ export default function DashboardPage() {
       .catch(() => { });
 
     return () => { cancelled = true; };
-  }, [yearlyRange]);
+  }, [yearlyRange, createdBy]);
 
   // Auto-hide success notification after 2s
   useEffect(() => {
@@ -228,7 +231,8 @@ export default function DashboardPage() {
       const [monthly, yearly] = await Promise.all([
         fetch(`/api/transactions?${new URLSearchParams({ start: activeRange.start, end: activeRange.end, createdBy }).toString()}`)
           .then((r) => { if (!r.ok) throw new Error("Gagal refresh"); return r.json(); }),
-        fetch(`/api/transactions?${new URLSearchParams({ start: yearlyRange.start, end: yearlyRange.end, createdBy: "" }).toString()}`)
+        // Yearly data: with createdBy filter, but full year (Jan-today)
+        fetch(`/api/transactions?${new URLSearchParams({ start: yearlyRange.start, end: yearlyRange.end, createdBy }).toString()}`)
           .then((r) => r.json()),
       ]);
       setTransactions(monthly.transactions || []);
@@ -262,6 +266,20 @@ export default function DashboardPage() {
       return true;
     });
   }, [transactions, sumberDana, categories, search]);
+
+  // Apply sumberDana, kategori, search filters to yearly data (but NOT date range)
+  const yearlyFiltered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const shouldSearch = term.length > 3;
+
+    return yearlyTransactions.filter((t) => {
+      if (sumberDana && t.source !== sumberDana) return false;
+      if (categories.length > 0 && !categories.includes(t.kategori)) return false;
+      if (shouldSearch && !t.keterangan?.toLowerCase().includes(term))
+        return false;
+      return true;
+    });
+  }, [yearlyTransactions, sumberDana, categories, search]);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
@@ -368,7 +386,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <ChartsGrid transactions={filtered} yearlyTransactions={yearlyTransactions} range={activeRange} />
+              <ChartsGrid transactions={filtered} yearlyTransactions={yearlyFiltered} range={activeRange} />
             )}
           </div>
           <div>

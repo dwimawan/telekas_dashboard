@@ -40,7 +40,6 @@ export default function DashboardProvider({ children }) {
   const [sumberDana, setSumberDana] = useState("");
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
-  const [period, setPeriod] = useState("M"); // D | W | M | 6M | Y
 
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -216,8 +215,6 @@ export default function DashboardProvider({ children }) {
     setCategories,
     search,
     setSearch,
-    period,
-    setPeriod,
     monthlyStartDay,
     selectedMonth,
     selectedYear,

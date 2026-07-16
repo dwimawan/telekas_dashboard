@@ -1,5 +1,5 @@
 /* TeleKas service worker — app-shell caching for PWA install/offline. */
-const CACHE = "telekas-v2";
+const CACHE = "telekas-v3";
 const PRECACHE = ["/", "/transactions", "/insights", "/profile", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

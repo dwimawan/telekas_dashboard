@@ -2,19 +2,17 @@
 
 import { useMemo } from "react";
 import { useDashboard } from "@/components/dashboard-provider";
-import { PeriodPill, SegmentControl, CreatedByPill } from "@/components/widgets";
+import { PeriodPill, MobileHeaderBar } from "@/components/widgets";
 import { DailyBars, LabeledBars, CategoryDonut, TopSpendingList } from "@/components/charts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { formatRupiah, categoryEmoji } from "@/lib/utils";
-import { toISODate } from "@/lib/dates";
 import {
   expensesOf,
   sumNominal,
   totalToday,
   totalThisWeek,
-  totalBetween,
   dailySeries,
   weekSeries,
   monthlySeries,
@@ -23,20 +21,11 @@ import {
   topSpending,
 } from "@/lib/aggregate";
 
-const PERIOD_LABELS = {
-  D: "hari ini",
-  W: "minggu ini",
-  M: "bulan ini",
-  "6M": "6 bulan terakhir",
-  Y: "tahun ini",
-};
-
 export default function DashboardPage() {
   const {
     filteredCycle,
     filteredWide,
     activeRange,
-    period,
     loading,
     refreshing,
     error,
@@ -45,43 +34,17 @@ export default function DashboardPage() {
   const expenses = useMemo(() => expensesOf(filteredCycle), [filteredCycle]);
   const wideExpenses = useMemo(() => expensesOf(filteredWide), [filteredWide]);
 
-  const now = new Date();
   const spendToday = useMemo(() => totalToday(wideExpenses), [wideExpenses]);
   const spendWeek = useMemo(() => totalThisWeek(wideExpenses), [wideExpenses]);
   const spendCycle = useMemo(() => sumNominal(expenses), [expenses]);
 
   const months6 = useMemo(() => monthlySeries(wideExpenses, 6), [wideExpenses]);
-  const monthsYtd = useMemo(
-    () => monthlySeries(wideExpenses, now.getMonth() + 1),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [wideExpenses]
-  );
-
-  const periodTotal = useMemo(() => {
-    switch (period) {
-      case "D": return spendToday;
-      case "W": return spendWeek;
-      case "6M": return months6.reduce((s, m) => s + m.value, 0);
-      case "Y": return totalBetween(wideExpenses, `${now.getFullYear()}-01-01`, toISODate(now));
-      default: return spendCycle;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period, spendToday, spendWeek, spendCycle, months6, wideExpenses]);
 
   const daily = useMemo(() => dailySeries(expenses, activeRange), [expenses, activeRange]);
   const weeks = useMemo(() => weekSeries(expenses, activeRange), [expenses, activeRange]);
   const categoriesData = useMemo(() => byCategory(expenses), [expenses]);
   const sourcesData = useMemo(() => bySource(expenses), [expenses]);
   const top5 = useMemo(() => topSpending(expenses), [expenses]);
-
-  const periodChart = (height) =>
-    period === "6M" ? (
-      <LabeledBars data={months6} highlight="current" height={height} />
-    ) : period === "Y" ? (
-      <LabeledBars data={monthsYtd} highlight="current" height={height} />
-    ) : (
-      <DailyBars data={daily} height={height} />
-    );
 
   if (loading || refreshing) return <DashboardSkeleton />;
 
@@ -95,23 +58,17 @@ export default function DashboardPage() {
 
       {/* ============ Mobile (design 01) ============ */}
       <div className="flex flex-col gap-4 lg:hidden">
-        <CreatedByPill className="w-max" />
-        <div className="flex items-end justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <div className="text-[13px] font-semibold text-muted-foreground">
-              Total pengeluaran · {PERIOD_LABELS[period]}
-            </div>
-            <div className="text-[26px] font-extrabold tabular">
-              {formatRupiah(periodTotal)}
-            </div>
+        <MobileHeaderBar />
+        <div className="flex flex-col items-center gap-1 py-2 text-center">
+          <div className="text-[13px] font-semibold text-muted-foreground">
+            Total pengeluaran
           </div>
-          <SegmentControl />
-        </div>
-        <div className="flex justify-center">
-          <PeriodPill />
+          <div className="text-[32px] font-extrabold tabular">
+            {formatRupiah(spendCycle)}
+          </div>
         </div>
 
-        {periodChart(118)}
+        <DailyBars data={daily} height={118} />
 
         <Card className="rounded-card-lg">
           <CardContent className="flex flex-col gap-3 p-4">

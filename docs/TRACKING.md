@@ -20,7 +20,10 @@ Newest phase on top. Update this file with every meaningful change (feature, ref
 | Desktop transactions pagination + column sort — v1 spec (tanggal/nominal toggle asc-desc, page size 10/50/100/1000, "Halaman X dari Y", Sebelumnya/Berikutnya, total count) | `app/(app)/transactions/page.js` | ✅ |
 | Expense-by-source-of-fund donut — mobile dashboard, desktop dashboard, insights | `lib/aggregate.js` (`byField`/`bySource`), pages | ✅ |
 | Category emoji system — keyword map + deterministic fallback, pop-in + hover-wiggle animation | `lib/utils.js` (`categoryEmoji`), `app/globals.css` | ✅ |
-| `CreatedByPill` dropdown (replaces `SourcePill` on dashboard; defaults to logged-in user per v1 rules) | `components/widgets.jsx` | ✅ |
+| `CreatedByPill` dropdown (replaces `SourcePill` on dashboard; defaults to logged-in user per v1 rules) | `components/widgets.jsx` | ❌ removed in mobile-layout round (superseded by filter sheet) |
+| `MobileHeaderBar` — search toggle (left) · period pill (center) · filter sheet (right), shared by dashboard + transactions mobile | `components/widgets.jsx` | ✅ |
+| Mobile fixed period total — centered "Total pengeluaran" + cycle amount on dashboard & transactions | `app/(app)/page.js`, `app/(app)/transactions/page.js` | ✅ |
+| Per-day expense total next to day label in mobile transaction list (`Hari ini · -Rp110.000` style) | `app/(app)/transactions/page.js` | ✅ |
 | Shared `FilterFields` (dibuat oleh / sumber dana / kategori) reused by transactions **and** dashboard desktop | `components/widgets.jsx` | ✅ |
 
 ### Performed
@@ -40,6 +43,9 @@ Newest phase on top. Update this file with every meaningful change (feature, ref
 | Category filter lazy load | Chips ranked by cycle spend, top 5 shown + active selections; "Muat lainnya (+N)" / "Tampilkan lebih sedikit" toggle | ✅ |
 | Sidebar sticky + profile pinned | `sticky top-0 h-dvh` aside; profile card `mt-auto` bottom; filter area scrolls independently | ✅ |
 | Dashboard right column aligned | Donut cards `flex-1` + centered content — column bottoms match left column | ✅ |
+| Mobile: D/W/M/6M/Y segment control removed | `SegmentControl` + provider `period` state deleted (desktop already dropped it); dashboard mobile always shows daily chart + cycle total | ✅ |
+| Mobile header unified | Dashboard & transactions mobile now share `MobileHeaderBar`; page titles + inline `SearchBox`/filter button rows removed; `SearchBox` moved to `components/widgets.jsx` | ✅ |
+| SW cache bump | `telekas-v2` → `telekas-v3` (mobile layout changes) | ✅ |
 | Verification | `npm run build` green (11 routes) | ✅ |
 
 ---

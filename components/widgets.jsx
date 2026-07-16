@@ -1,15 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, UserRound } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import { cn, categoryColor, categoryEmoji, formatRupiah, isIncome } from "@/lib/utils";
 import { useDashboard } from "@/components/dashboard-provider";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 // Light date-range pill: ‹ 25 Jun – 24 Jul ›
 export function PeriodPill({ size = "md", className }) {
@@ -33,61 +42,86 @@ export function PeriodPill({ size = "md", className }) {
   );
 }
 
-const SEGMENTS = ["D", "W", "M", "6M", "Y"];
-
-// D / W / M / 6M / Y segment control
-export function SegmentControl({ className, segments = SEGMENTS }) {
-  const { period, setPeriod } = useDashboard();
+// Keyword search over keterangan (shared by mobile header + desktop transactions)
+export function SearchBox({ className, autoFocus }) {
+  const { search, setSearch } = useDashboard();
   return (
-    <div className={cn("flex gap-1 rounded-full bg-secondary p-1", className)}>
-      {segments.map((s) => (
-        <button
-          key={s}
-          type="button"
-          onClick={() => setPeriod(s)}
-          className={cn(
-            "rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors",
-            s === period
-              ? "bg-pill text-pill-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {s}
-        </button>
-      ))}
+    <div className={cn("relative", className)}>
+      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder='Cari keterangan — mis. "arisan"'
+        className="pl-11"
+        autoFocus={autoFocus}
+      />
     </div>
   );
 }
 
-// "Dibuat oleh ▾" pill with dropdown — defaults to the logged-in user (set in provider)
-export function CreatedByPill({ className }) {
-  const { createdBy, setCreatedBy, allCreatedBy } = useDashboard();
+// Mobile top bar: search toggle (left) · period pill (center) · filter sheet (right)
+export function MobileHeaderBar() {
+  const { search, setSearch, filteredCycle, resetFilters } = useDashboard();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchActive = searchOpen || search.trim().length > 0;
+
+  const toggleSearch = () => {
+    if (searchOpen) setSearch("");
+    setSearchOpen((v) => !v);
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
         <button
           type="button"
+          aria-label="Cari"
+          onClick={toggleSearch}
           className={cn(
-            "flex items-center gap-2 rounded-full bg-secondary px-3.5 py-2 text-[13px] font-semibold text-secondary-foreground transition-colors hover:bg-input",
-            className
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
+            searchActive
+              ? "bg-pill text-pill-foreground"
+              : "bg-secondary text-secondary-foreground"
           )}
         >
-          <UserRound className="h-4 w-4 text-primary" />
-          {createdBy || "Semua pengguna"}
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="h-4 w-4" />
         </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuItem onClick={() => setCreatedBy("")}>
-          Semua pengguna
-        </DropdownMenuItem>
-        {allCreatedBy.map((u) => (
-          <DropdownMenuItem key={u} onClick={() => setCreatedBy(u)}>
-            {u}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+
+        <PeriodPill className="min-w-0" />
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              aria-label="Filter"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Filter</SheetTitle>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-sm font-bold text-muted-foreground"
+              >
+                Reset
+              </button>
+            </SheetHeader>
+            <FilterFields />
+            <SheetClose asChild>
+              <Button size="lg" className="mt-2 w-full">
+                Tampilkan {filteredCycle.length} transaksi
+              </Button>
+            </SheetClose>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {searchOpen && <SearchBox autoFocus />}
+    </div>
   );
 }
 

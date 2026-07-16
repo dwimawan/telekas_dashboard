@@ -1,41 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
 import { useDashboard } from "@/components/dashboard-provider";
-import { PeriodPill, TxAvatar, TxAmount, FilterFields } from "@/components/widgets";
+import {
+  PeriodPill,
+  TxAvatar,
+  TxAmount,
+  SearchBox,
+  MobileHeaderBar,
+} from "@/components/widgets";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from "@/components/ui/sheet";
-import { groupByDay } from "@/lib/aggregate";
+import { expensesOf, sumNominal, groupByDay } from "@/lib/aggregate";
+import { formatRupiah } from "@/lib/utils";
 import { parseTanggal } from "@/lib/dates";
 
 const MOBILE_PAGE = 20;
 const PAGE_SIZE_OPTIONS = [10, 50, 100, 1000];
-
-function SearchBox({ className }) {
-  const { search, setSearch } = useDashboard();
-  return (
-    <div className={`relative ${className || ""}`}>
-      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder='Cari keterangan — mis. "arisan"'
-        className="pl-11"
-      />
-    </div>
-  );
-}
 
 // Column header with v1 sort affordance: ▲ asc, ▼ desc, ↕ inactive
 function SortHeader({ label, sortKey, sort, onSort, align = "left" }) {
@@ -57,11 +39,15 @@ function SortHeader({ label, sortKey, sort, onSort, align = "left" }) {
 }
 
 export default function TransactionsPage() {
-  const { filteredCycle, loading, refreshing, error, resetFilters } = useDashboard();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const { filteredCycle, loading, refreshing, error } = useDashboard();
 
   // ----- Mobile: newest-first list revealed in chunks (load more)
   const [visibleCount, setVisibleCount] = useState(MOBILE_PAGE);
+
+  const totalExpenses = useMemo(
+    () => sumNominal(expensesOf(filteredCycle)),
+    [filteredCycle]
+  );
 
   const newestFirst = useMemo(
     () =>
@@ -132,58 +118,34 @@ export default function TransactionsPage() {
 
       {/* ============ Mobile (design 02 + 03) ============ */}
       <div className="flex flex-col gap-4 lg:hidden">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-extrabold">Transaksi</h1>
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                aria-label="Filter"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-              </button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filter</SheetTitle>
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="text-sm font-bold text-muted-foreground"
-                >
-                  Reset
-                </button>
-              </SheetHeader>
-              <div className="flex flex-col gap-2.5">
-                <div className="text-[13px] font-bold text-muted-foreground">Periode</div>
-                <div className="flex justify-center">
-                  <PeriodPill />
-                </div>
-              </div>
-              <FilterFields />
-              <SheetClose asChild>
-                <Button size="lg" className="mt-2 w-full">
-                  Tampilkan {filteredCycle.length} transaksi
-                </Button>
-              </SheetClose>
-            </SheetContent>
-          </Sheet>
+        <MobileHeaderBar />
+        <div className="flex flex-col items-center gap-1 py-2 text-center">
+          <div className="text-[13px] font-semibold text-muted-foreground">
+            Total pengeluaran
+          </div>
+          <div className="text-[32px] font-extrabold tabular">
+            {formatRupiah(totalExpenses)}
+          </div>
         </div>
-        <div className="flex justify-center">
-          <PeriodPill />
-        </div>
-        <SearchBox />
 
         {groups.length === 0 && (
           <div className="py-10 text-center text-sm text-muted-foreground">
             Tidak ada transaksi
           </div>
         )}
-        {groups.map((g) => (
+        {groups.map((g) => {
+          const dayTotal = sumNominal(expensesOf(g.items));
+          return (
           <div key={g.iso} className="flex flex-col gap-3.5">
-            <div className="text-center text-sm font-bold text-secondary-foreground">
-              {g.label}
+            <div className="flex items-baseline justify-between gap-3">
+              <div className="text-sm font-bold text-secondary-foreground">
+                {g.label}
+              </div>
+              {dayTotal > 0 && (
+                <div className="text-sm font-bold text-muted-foreground tabular">
+                  -{formatRupiah(dayTotal)}
+                </div>
+              )}
             </div>
             {g.items.map((tx, i) => (
               <div key={tx.id ?? `${g.iso}-${i}`} className="flex items-center gap-3">
@@ -206,7 +168,8 @@ export default function TransactionsPage() {
               </div>
             ))}
           </div>
-        ))}
+          );
+        })}
 
         {remaining > 0 && (
           <Button

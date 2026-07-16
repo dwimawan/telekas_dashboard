@@ -50,8 +50,15 @@ async function verifyEdge(token, secret) {
 
 const PUBLIC_PATHS = ["/login", "/api/login"];
 
+// PWA assets must be reachable without auth (manifest fetch, SW registration, icons)
+const PUBLIC_ASSETS = ["/manifest.webmanifest", "/sw.js", "/icons/"];
+
 export default async function middleware(request) {
   const { pathname } = request.nextUrl;
+
+  if (PUBLIC_ASSETS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
 
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     const token = request.cookies.get("telefinance_token")?.value;

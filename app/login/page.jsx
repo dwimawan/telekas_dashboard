@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,60 +37,63 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="mb-6 text-center">
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            TeleKas
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Masuk untuk melanjutkan
-          </p>
+    <div className="flex min-h-dvh items-center justify-center bg-background px-5">
+      <div className="w-full max-w-sm rounded-card-lg bg-card p-6">
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-primary text-xl font-extrabold text-primary-foreground">
+            T
+          </div>
+          <div>
+            <h1 className="text-lg font-extrabold">TeleKas</h1>
+            <p className="mt-0.5 text-sm font-semibold text-muted-foreground">
+              Masuk untuk melanjutkan
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-500 dark:text-slate-400" htmlFor="username">
+          <div className="flex flex-col gap-1.5">
+            <label
+              className="text-xs font-bold text-muted-foreground"
+              htmlFor="username"
+            >
               Username
             </label>
-            <input
+            <Input
               id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-500 dark:text-slate-400" htmlFor="password">
+          <div className="flex flex-col gap-1.5">
+            <label
+              className="text-xs font-bold text-muted-foreground"
+              htmlFor="password"
+            >
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
 
           {error && (
-            <div className="rounded-lg border border-expense/30 bg-expense/5 px-3 py-2 text-xs text-expense">
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={loading} className="w-full" size="lg">
             {loading ? "Memproses…" : "Masuk"}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
